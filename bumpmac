@@ -1,0 +1,21 @@
+#! /bin/bash
+
+# increments ('bumps') the last letter of hw mac address
+# useful for wifi networks (like starbucks) which kick users by mac after 1hr
+
+# default to wlan0 if no interface specified
+if [ $# -eq 0 ]
+then
+    iface='wlan0'
+else
+    iface=$1
+fi
+
+mac=`sudo ifconfig $iface | grep HWaddr | xargs | rev | cut -d ' ' -f 1 | rev`
+last_char=`echo ${mac: -1}`
+new_last_char=`echo "obase=ibase=16;${last_char^^}+1" | bc | tail -c 2`
+new_mac="${mac::-1}${new_last_char,,}"
+
+sudo ifconfig $iface down
+sudo ifconfig $iface hw ether $new_mac
+sudo ifconfig $iface up
